@@ -155,6 +155,7 @@ let pname s = { Tac2expr.mltac_plugin = "rocq-sharing-analyser.plugin"; mltac_ta
 
 let define s spec f = Tac2externals.define (pname s) spec f
 
+(* XXX also give access to HConstr.(of_constr |> self) (requires rocq 9) *)
 let () = define "hcons" (constr @-> ret constr) @@ fun c ->
   let c = EConstr.Unsafe.to_constr c in
   let c = Constr.hcons c in
