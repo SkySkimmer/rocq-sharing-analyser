@@ -7,6 +7,12 @@ val analyse_constr : Constr.t -> analysis
 
 val analyse_econstr : EConstr.t -> analysis
 
+val iter_ltr : (Constr.t -> unit) -> Constr.t -> unit
+
+val map_ltr : (Constr.t -> Constr.t) -> Constr.t -> Constr.t
+
 val annotate_constr : analysis -> Constr.t -> analysis * Constr.t Int.Map.t * Constr.t
 
 val tree_size : Constr.t -> int
+
+val graph_size : analysis -> Constr.t -> int

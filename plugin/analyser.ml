@@ -33,8 +33,7 @@ let pr_rec_analysis x =
 
 
 let pp_stats info c =
-  let info = ANA.to_list info in
-  let graph_size = CList.count (function ANA.Fresh _ -> true | ANA.Seen _ -> false) info in
+  let graph_size = graph_size info c in
   let tree_size = tree_size c in
   let open Pp in
   v 0

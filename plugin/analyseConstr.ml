@@ -87,9 +87,28 @@ let analyse_constr (c:Constr.t) = ANA.analyse constr_descr (Obj.repr c)
 
 let analyse_econstr c = analyse_constr (EConstr.Unsafe.to_constr c)
 
+open Constr
+
+(* iterate in the order of memory representation
+   (identical to Constr.iter currently but we don't want to rely on that) *)
+let iter_ltr f c = match kind c with
+  | (Rel _ | Meta _ | Var _   | Sort _ | Const _ | Ind _
+    | Construct _ | Int _ | Float _ | String _) -> ()
+  | Cast (c,_,t) -> f c; f t
+  | Prod (_,t,c) -> f t; f c
+  | Lambda (_,t,c) -> f t; f c
+  | LetIn (_,b,t,c) -> f b; f t; f c
+  | App (c,l) -> f c; Array.iter f l
+  | Proj (_p,_r,c) -> f c
+  | Evar (_,l) -> SList.Skip.iter f l
+  | Case (_,_,pms,p,iv,c,bl) ->
+    Array.iter f pms; f (snd @@ fst p); iter_invert f iv; f c; Array.iter (fun (_, b) -> f b) bl
+  | Fix (_,(_,tl,bl)) -> Array.iter f tl; Array.iter f bl
+  | CoFix (_,(_,tl,bl)) -> Array.iter f tl; Array.iter f bl
+  | Array(_u,t,def,ty) -> Array.iter f t; f def; f ty
+
 (* map in the order of memory representation *)
 let map_ltr f c =
-  let open Constr in
   match kind c with
   | (Rel _ | Meta _ | Var _   | Sort _ | Const _ | Ind _
     | Construct _ | Int _ | Float _ | String _) -> c
@@ -153,7 +172,6 @@ let map_ltr f c =
     else mkArray(u,t',def',ty')
 
 let annotate_constr info c =
-  let open Constr in
   let info = ref info in
   let map = ref Int.Map.empty in
   let annot s c =
@@ -181,3 +199,18 @@ let rec tree_size_aux cnt c =
   Constr.fold tree_size_aux (cnt+1) c
 
 let tree_size c = tree_size_aux 0 c
+
+let graph_size info c =
+  let info = ref info in
+  let cnt = ref 0 in
+  let rec graph_size_aux c =
+    let i', cinf = ANA.step !info in
+    info := i';
+    match cinf with
+    | Fresh _ ->
+      incr cnt;
+      iter_ltr graph_size_aux c
+    | Seen _ -> ()
+  in
+  graph_size_aux c;
+  !cnt
