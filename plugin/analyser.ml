@@ -55,6 +55,7 @@ let do_proof_analysis ~pstate =
     | [c] -> c
     | _ -> CErrors.user_err Pp.(str "Analysis of multi statement proofs not supported.")
   in
+  let sigma = Evd.minimize_universes sigma in
   let c = Evarutil.nf_evar sigma c in
   let c = EConstr.Unsafe.to_constr c in
   let info = analyse_constr c in
