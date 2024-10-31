@@ -37,8 +37,9 @@ let pp_stats info c =
   let graph_size = CList.count (function ANA.Fresh _ -> true | ANA.Seen _ -> false) info in
   let tree_size = tree_size c in
   let open Pp in
-  str "tree size = " ++ int tree_size ++ fnl() ++
-  str "graph size = " ++ int graph_size
+  v 0
+    (str "tree size = " ++ int tree_size ++ spc() ++
+     str "graph size = " ++ int graph_size)
 
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
@@ -50,11 +51,14 @@ let pp_full env sigma info c =
     let pr_constr c = Printer.pr_constr_env env sigma c in
     let is_done = ANA.is_done info' in
     let () = if not is_done then warn_not_done () in
-    pr_constr c ++ fnl() ++ fnl() ++
-    str "subterms:" ++ fnl() ++
-    prlist_with_sep fnl (fun (i,c) -> int i ++ str " ==> " ++ pr_constr c)
-      (Int.Map.bindings map) ++ fnl() ++ fnl() ++
-    pp_stats info c
+    v 0
+      (pr_constr c ++ spc() ++ spc() ++
+       str "subterms:" ++ spc() ++
+       hov 0
+         (prlist_with_sep spc (fun (i,c) -> int i ++ str " ==> " ++ pr_constr c)
+            (Int.Map.bindings map))
+       ++ spc() ++ spc() ++
+       pp_stats info c)
   in
   msg
 
