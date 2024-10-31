@@ -176,23 +176,26 @@ let map_ltr f c =
 let annotate_constr info c =
   let info = ref info in
   let map = ref Int.Map.empty in
-  let annot s c =
+  let as_var s =
     let s = Id.of_string_soft ("(* "^s^" *)") in
-    mkApp (mkVar s, [|c|])
+    mkVar s
   in
+  let annot s c = mkApp (as_var s, [|c|]) in
   let rec aux c =
     let i', cinf = ANA.step !info in
     info := i';
     match cinf with
     | Fresh idx ->
-      map := Int.Map.add idx c !map;
-      let c = map_ltr aux c in
-      annot ("fresh " ^ string_of_int idx) c
+      let c' = map_ltr aux c in
+      map := Int.Map.add idx (c,c') !map;
+      annot ("fresh " ^ string_of_int idx) c'
     | Seen idx ->
       match Int.Map.find_opt idx !map with
       | None -> annot ("MISSING seen " ^ string_of_int idx) c
-      | Some c' -> if c != c' then annot ("MISMATCH seen " ^ string_of_int idx) c
-        else annot ("seen " ^ string_of_int idx) c
+      | Some (c',_) -> if c != c' then annot ("MISMATCH seen " ^ string_of_int idx) c
+        else
+          (* more verbose: [annot seen c] *)
+          as_var ("seen " ^ string_of_int idx)
   in
   let c = aux c in
   !info, !map, c

@@ -55,7 +55,7 @@ let pp_annot env sigma info c =
     v 0
       (pr_constr c ++ spc() ++ spc() ++
        str "subterms:" ++ spc() ++
-       prlist_with_sep spc (fun (i,c) -> int i ++ str " ==> " ++ pr_constr c)
+       prlist_with_sep spc (fun (i,(_,c)) -> int i ++ str " ==> " ++ pr_constr c)
          (Int.Map.bindings map))
   in
   msg

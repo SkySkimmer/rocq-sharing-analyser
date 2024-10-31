@@ -11,7 +11,7 @@ val iter_ltr : (Constr.t -> unit) -> Constr.t -> unit
 
 val map_ltr : (Constr.t -> Constr.t) -> Constr.t -> Constr.t
 
-val annotate_constr : analysis -> Constr.t -> analysis * Constr.t Int.Map.t * Constr.t
+val annotate_constr : analysis -> Constr.t -> analysis * (Constr.t * Constr.t) Int.Map.t * Constr.t
 
 val tree_size : Constr.t -> int
 
