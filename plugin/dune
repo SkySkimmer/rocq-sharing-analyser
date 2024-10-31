@@ -1,0 +1,6 @@
+(library
+ (name rocq_sharing_analyser_plugin)
+ (public_name rocq-sharing-analyser.plugin)
+ (libraries coq-core.vernac rocq-sharing-analyser.lib))
+
+(coq.pp (modules g_analyser))

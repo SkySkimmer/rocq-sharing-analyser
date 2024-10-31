@@ -1,0 +1,9 @@
+DECLARE PLUGIN "rocq-sharing-analyser.plugin"
+
+{
+open Stdarg
+}
+
+VERNAC COMMAND EXTEND SharingAnalyser CLASSIFIED AS QUERY STATE proof_opt_query
+| [ "Sharing" "Analysis" "for" constr(c) ] -> { Analyser.do_constr_analysis c }
+END
