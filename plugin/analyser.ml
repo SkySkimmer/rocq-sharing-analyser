@@ -223,12 +223,40 @@ let do_constr_analysis ~pstate c =
   let msg = pp_with_info env sigma info c in
   Feedback.msg_info msg
 
-let rocq_type n = KerName.make Ltac2_plugin.Tac2env.coq_prefix (Label.make n)
+let do_proof_analysis ~pstate =
+  let p = Declare.Proof.get pstate in
+  let { Proof.sigma } = Proof.data p in
+  let c = Proof.partial_proof p in
+  let c = match c with
+    | [c] -> c
+    | _ -> CErrors.user_err Pp.(str "Analysis of multi statement proofs not supported.")
+  in
+  let c = Evarutil.nf_evar sigma c in
+  let c = EConstr.Unsafe.to_constr c in
+  let info = analyse_constr c in
+  (* NB we want global env not goal env here *)
+  let msg = pp_with_info (Global.env()) sigma info c in
+  Feedback.msg_info msg
+
+let do_def_body_analysis ~opaque_access qid =
+  let kn = Nametab.locate_constant qid in
+  match Global.body_of_constant opaque_access kn with
+  | None -> CErrors.user_err Pp.(Libnames.pr_qualid qid ++ str " does not have a body.")
+  | Some (c, _, _) ->
+    (* XXX handle poly and private univs*)
+    let env = Global.env() in
+    let sigma = Evd.from_env env in
+    let info = analyse_constr c in
+    let msg = pp_with_info env sigma info c in
+    Feedback.msg_info msg
+
+open Ltac2_plugin
+
+let rocq_type n = KerName.make Tac2env.coq_prefix (Label.make n)
 
 let t_constr = rocq_type "constr"
 
 let do_ltac2_constr_analysis ~pstate tac =
-  let open Ltac2_plugin in
   let open Tac2expr in
   let loc = tac.CAst.loc in
   let tac = CAst.make ?loc (CTacCnv (tac, CAst.make ?loc (CTypRef (AbsKn (Other t_constr), [])))) in
@@ -257,3 +285,15 @@ let do_ltac2_constr_analysis ~pstate tac =
   let info = analyse_constr c in
   let msg = pp_with_info env sigma info c in
   Feedback.msg_info msg
+
+open Tac2ffi
+open Tac2externals
+
+let pname s = { Tac2expr.mltac_plugin = "rocq-sharing-analyser.plugin"; mltac_tactic = s }
+
+let define s spec f = Tac2externals.define (pname s) spec f
+
+let () = define "hcons" (constr @-> ret constr) @@ fun c ->
+  let c = EConstr.Unsafe.to_constr c in
+  let c = Constr.hcons c in
+  EConstr.of_constr c

@@ -6,6 +6,8 @@ open Ltac2_plugin.G_ltac2
 }
 
 VERNAC COMMAND EXTEND SharingAnalyser CLASSIFIED AS QUERY STATE proof_opt_query
-| [ "Sharing" "Analysis" "Term" constr(c) ] -> { Analyser.do_constr_analysis c }
-| [ "Sharing" "Analysis" "Ltac2" ltac2_expr(c) ] -> { Analyser.do_ltac2_constr_analysis c }
+| [ "Sharing" "Analysis" "Term" constr(c) ] -> { fun ~pstate -> Analyser.do_constr_analysis ~pstate c }
+| [ "Sharing" "Analysis" "Ltac2" ltac2_expr(c) ] -> { fun ~pstate -> Analyser.do_ltac2_constr_analysis ~pstate c }
+| ![proof_query] [ "Sharing" "Analysis" "Proof" ] -> { fun ~pstate -> Analyser.do_proof_analysis ~pstate }
+| ![opaque_access] [ "Sharing" "Analysis" "Definition" "Body" global(g) ] -> { fun ~opaque_access -> Analyser.do_def_body_analysis ~opaque_access g }
 END
