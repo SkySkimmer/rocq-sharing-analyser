@@ -189,12 +189,16 @@ let annotate_constr info c =
   let c = aux c in
   !info, !map, c
 
+let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
+    Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
+
 let pp_with_info env sigma info c =
   let info, map, c = annotate_constr info c in
   let msg =
     let open Pp in
     let pr_constr c = Printer.pr_constr_env env sigma c in
-    str "is_done = " ++ bool (Analyser.is_done info) ++ fnl () ++
+    let is_done = Analyser.is_done info in
+    let () = if not is_done then warn_not_done () in
     pr_constr c ++ fnl() ++ fnl() ++
     prlist_with_sep fnl (fun (i,c) -> int i ++ str " ==> " ++ pr_constr c)
       (Int.Map.bindings map)
