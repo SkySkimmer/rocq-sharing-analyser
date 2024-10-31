@@ -102,7 +102,10 @@ let do_proof_analysis ~pstate mode =
   Feedback.msg_info msg
 
 let do_def_body_analysis ~opaque_access mode qid =
-  let kn = Nametab.locate_constant qid in
+  let kn = try Nametab.locate_constant qid
+    with Not_found ->
+      CErrors.user_err ?loc:qid.loc Pp.(Libnames.pr_qualid qid ++ str " is not a constant.")
+  in
   match Global.body_of_constant opaque_access kn with
   | None -> CErrors.user_err Pp.(Libnames.pr_qualid qid ++ str " does not have a body.")
   | Some (c, _, _) ->
