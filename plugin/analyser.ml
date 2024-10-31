@@ -39,7 +39,8 @@ let pp_stats info c =
   let open Pp in
   v 0
     (str "tree size = " ++ int tree_size ++ spc() ++
-     str "graph size = " ++ int graph_size)
+     str "graph size = " ++ int graph_size ++ spc() ++
+     str "sharing factor = " ++ int (((tree_size - graph_size) * 100) / tree_size) ++ str "%")
 
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
