@@ -176,3 +176,8 @@ let annotate_constr info c =
   in
   let c = aux c in
   !info, !map, c
+
+let rec tree_size_aux cnt c =
+  Constr.fold tree_size_aux (cnt+1) c
+
+let tree_size c = tree_size_aux 0 c
