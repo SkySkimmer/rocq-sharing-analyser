@@ -48,6 +48,8 @@ type ('constr, 'types, 'sort, 'univs, 'r) kind_of_term = ('constr, 'types, 'sort
   | Array     of 'univs * 'constr array * 'constr * 'types
 [@@warning "-34"]
 
+let slist x = let open ANA in cofix (fun x_slist -> sum [|[|x;x_slist|];[|ignore;x_slist|]|])
+
 let constr_descr =
   let open ANA in
   cofix (fun constr ->

@@ -28,8 +28,6 @@ val pair : type_descr -> type_descr -> type_descr
 
 val list : type_descr -> type_descr
 
-val slist : type_descr -> type_descr
-
 val cofix : (type_descr -> type_descr) -> type_descr
 (** Must be productive. [remember] counts as the identity for productivity analysis. *)
 

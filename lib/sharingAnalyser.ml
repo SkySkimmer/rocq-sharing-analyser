@@ -53,8 +53,6 @@ let cofix f =
 
 let list x = cofix (fun x_list -> sum [|[|x;x_list|]|])
 
-let slist x = cofix (fun x_slist -> sum [|[|x;x_slist|];[|ignore;x_slist|]|])
-
 type sharing_info =
   | Fresh of int
   | Seen of int
