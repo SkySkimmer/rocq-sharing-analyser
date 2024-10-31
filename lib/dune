@@ -1,0 +1,6 @@
+(library
+ (name rocqSharingAnalyser)
+ (synopsis "Physical sharing analysis of OCaml values.")
+ (public_name rocq-sharing-analyser.sharingAnalyser)
+ (wrapped true)
+ (foreign_stubs (language c) (names rocq_sharing_analysis)))
