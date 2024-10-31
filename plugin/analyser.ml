@@ -205,16 +205,53 @@ let pp_with_info env sigma info c =
   in
   msg
 
-let do_constr_analysis ~pstate c =
-  let sigma, env = match pstate with
+let get_current_context_opt pstate =
+  match pstate with
     | None ->
       let env = Global.env() in
       Evd.from_env env, env
     | Some pstate -> Declare.Proof.get_current_context pstate
-  in
+
+let do_constr_analysis ~pstate c =
+  let sigma, env = get_current_context_opt pstate in
   let flags = Pretyping.all_no_fail_flags in
   let c = Constrintern.intern_constr env sigma c in
   let sigma, c = Pretyping.understand_tcc ~flags env sigma c in
+  let c = EConstr.Unsafe.to_constr c in
+  let info = analyse_constr c in
+  let msg = pp_with_info env sigma info c in
+  Feedback.msg_info msg
+
+let rocq_type n = KerName.make Ltac2_plugin.Tac2env.coq_prefix (Label.make n)
+
+let t_constr = rocq_type "constr"
+
+let do_ltac2_constr_analysis ~pstate tac =
+  let open Ltac2_plugin in
+  let open Tac2expr in
+  let loc = tac.CAst.loc in
+  let tac = CAst.make ?loc (CTacCnv (tac, CAst.make ?loc (CTypRef (AbsKn (Other t_constr), [])))) in
+  let tac, _ = Tac2intern.intern ~strict:false [] tac in
+  let tac = Tac2interp.interp Tac2interp.empty_environment tac in
+  let env = Global.env () in
+  let selector, proof =
+    match pstate with
+    | None ->
+      let sigma = Evd.from_env env in
+      let name, poly = Id.of_string "ltac2", false in
+      Goal_select.SelectAll, Proof.start ~name ~poly sigma []
+    | Some pstate ->
+      Goal_select.get_default_goal_selector (),
+      Declare.Proof.get pstate
+  in
+    let nosuchgoal =
+    let info = Exninfo.reify () in
+    Proofview.tclZERO ~info (Proof.SuggestNoSuchGoals (1,proof))
+  in
+  let tac = Goal_select.tclSELECT ~nosuchgoal selector tac in
+  let (proof, _, ans) = Proof.run_tactic (Global.env ()) tac proof in
+  let { Proof.sigma } = Proof.data proof in
+  let c = Tac2ffi.to_constr ans in
   let c = EConstr.Unsafe.to_constr c in
   let info = analyse_constr c in
   let msg = pp_with_info env sigma info c in
