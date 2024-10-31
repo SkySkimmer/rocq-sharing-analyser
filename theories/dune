@@ -1,0 +1,4 @@
+(coq.theory
+ (name SharingAnalyser)
+ (package rocq-sharing-analyser)
+ (plugins rocq-sharing-analyser.plugin))
