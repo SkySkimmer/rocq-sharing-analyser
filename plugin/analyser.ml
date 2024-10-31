@@ -212,7 +212,9 @@ let do_constr_analysis ~pstate c =
       Evd.from_env env, env
     | Some pstate -> Declare.Proof.get_current_context pstate
   in
-  let sigma, c = Constrintern.interp_constr_evars env sigma c in
+  let flags = Pretyping.all_no_fail_flags in
+  let c = Constrintern.intern_constr env sigma c in
+  let sigma, c = Pretyping.understand_tcc ~flags env sigma c in
   let c = EConstr.Unsafe.to_constr c in
   let info = analyse_constr c in
   let msg = pp_with_info env sigma info c in
