@@ -173,7 +173,7 @@ let map_ltr f c =
     if def'==def && t==t' && ty==ty' then c
     else mkArray(u,t',def',ty')
 
-let annotate_constr info c =
+let annotate_constr ~verbose info c =
   let info = ref info in
   let map = ref Int.Map.empty in
   let as_var s =
@@ -193,9 +193,8 @@ let annotate_constr info c =
       match Int.Map.find_opt idx !map with
       | None -> annot ("MISSING seen " ^ string_of_int idx) c
       | Some (c',_) -> if c != c' then annot ("MISMATCH seen " ^ string_of_int idx) c
-        else
-          (* more verbose: [annot seen c] *)
-          as_var ("seen " ^ string_of_int idx)
+        else if verbose then annot ("seen " ^string_of_int idx) c
+        else as_var ("seen " ^ string_of_int idx)
   in
   let c = aux c in
   !info, !map, c

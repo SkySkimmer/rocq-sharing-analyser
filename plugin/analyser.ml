@@ -3,14 +3,15 @@ open AnalyseConstr
 
 module ANA = RocqSharingAnalyser.SharingAnalyser
 
-type output_mode = Full | Stats | Annotate
+type output_mode = Full | Stats | Annotate of bool
 
 let output_mode_attr =
   let open Attributes in
   let keys = [
     ("full", Full);
     ("stats", Stats);
-    ("annotate", Annotate);
+    ("annotate", Annotate false);
+    ("verbose_annotate", Annotate true);
   ]
   in
   let mk (key,v) = (key, single_key_parser ~name:"display" ~key v) in
@@ -45,8 +46,8 @@ let pp_stats info c =
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
 
-let pp_annot env sigma info c =
-  let info', map, c = annotate_constr info c in
+let pp_annot ~verbose env sigma info c =
+  let info', map, c = annotate_constr ~verbose info c in
   let msg =
     let open Pp in
     let pr_constr c = Printer.pr_constr_env env sigma c in
@@ -63,9 +64,9 @@ let pp_annot env sigma info c =
 let pp_with_info mode env sigma info c = match mode with
 | Full ->
   let open Pp in
-  pp_annot env sigma info c ++ fnl() ++ pp_stats info c
+  pp_annot ~verbose:true env sigma info c ++ fnl() ++ pp_stats info c
 | Stats -> pp_stats info c
-| Annotate -> pp_annot env sigma info c
+| Annotate verbose -> pp_annot ~verbose env sigma info c
 
 let get_current_context_opt pstate =
   match pstate with
