@@ -187,17 +187,20 @@ let annotate_constr ~verbose info c =
     match cinf with
     | Fresh idx ->
       let c' = map_ltr aux c in
-      map := Int.Map.add idx (c,c') !map;
+      map := Int.Map.add idx (c,c',ref 1) !map;
       annot ("fresh " ^ string_of_int idx) c'
     | Seen idx ->
       match Int.Map.find_opt idx !map with
       | None -> annot ("MISSING seen " ^ string_of_int idx) c
-      | Some (c',_) -> if c != c' then annot ("MISMATCH seen " ^ string_of_int idx) c
+      | Some (c',_,refcnt) ->
+        incr refcnt;
+        if c != c' then CErrors.anomaly Pp.(str "mismatch when annotating")
         else if verbose then annot ("seen " ^string_of_int idx) c
         else as_var ("seen " ^ string_of_int idx)
   in
   let c = aux c in
-  !info, !map, c
+  let map = Int.Map.map (fun (c,c',refcnt) -> c,c',!refcnt) !map in
+  !info, map, c
 
 let rec tree_size_aux cnt c =
   Constr.fold tree_size_aux (cnt+1) c
