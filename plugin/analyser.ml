@@ -200,6 +200,7 @@ let pp_with_info env sigma info c =
     let is_done = Analyser.is_done info in
     let () = if not is_done then warn_not_done () in
     pr_constr c ++ fnl() ++ fnl() ++
+    str "subterms:" ++ fnl() ++
     prlist_with_sep fnl (fun (i,c) -> int i ++ str " ==> " ++ pr_constr c)
       (Int.Map.bindings map)
   in
