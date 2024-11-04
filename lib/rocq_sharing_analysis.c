@@ -423,6 +423,7 @@ static void analyse_rec(struct analyse_state* s, value top_type_descr, value v)
           goto next_item;
         }
         else {
+          if (Tag_val(v) != 0) analyse_invalid_argument (s, "sharingAnalyser expected array");
           header_t hd = Hd_val(v);
           mlsize_t sz = Wosize_hd(hd);
 
@@ -455,7 +456,14 @@ static void analyse_rec(struct analyse_state* s, value top_type_descr, value v)
           tag_t tag = Tag_hd(hd);
           mlsize_t sz = Wosize_hd(hd);
 
+          if (Wosize_val(Field(here_descr,0)) < tag)
+            analyse_invalid_argument (s, "sharingAnalyser bad sum tag");
+
           value this_tag_descrs = Field(Field(here_descr,0),tag);
+
+          if (Wosize_val(this_tag_descrs) != sz)
+            analyse_invalid_argument (s, "sharingAnalyser bad sum size");
+
           /* Remember that we still have to analyse fields 1 ... sz - 1 */
           if (sz > 1) {
             sp++;
