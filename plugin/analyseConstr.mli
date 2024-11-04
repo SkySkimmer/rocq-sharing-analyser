@@ -37,4 +37,5 @@ val debug_annotate_constr : verbose:bool -> analysis -> Constr.t ->
 
 val tree_size : Constr.t -> int
 
-val graph_size : analysis -> Constr.t -> int
+(** Return node count and edge count, taking sharing into account *)
+val graph_size : analysis -> Constr.t -> int * int

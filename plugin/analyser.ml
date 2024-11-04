@@ -36,13 +36,16 @@ let pr_rec_analysis x =
 
 
 let pp_stats info c =
-  let graph_size = graph_size info c in
+  let graph_size, edge_count = graph_size info c in
   let tree_size = tree_size c in
   let open Pp in
   v 0
     (str "tree size = " ++ int tree_size ++ spc() ++
      str "graph size = " ++ int graph_size ++ spc() ++
-     str "sharing factor = " ++ int (((tree_size - graph_size) * 100) / tree_size) ++ str "%")
+     str "edge count = " ++ int edge_count ++ spc() ++
+     str "sharing factor = " ++ int (((tree_size - graph_size) * 100) / tree_size) ++ str "%" ++ spc() ++
+     (* edge count in a tree = tree size (counting an edge from the world to the root) *)
+    str "edge sharing factor = " ++ int (((tree_size - edge_count) * 100) / tree_size) ++ str "%")
 
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")

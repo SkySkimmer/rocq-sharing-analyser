@@ -255,8 +255,10 @@ let tree_size c = tree_size_aux 0 c
 let graph_size info c =
   let info = ref info in
   let cnt = ref 0 in
+  let edge_cnt = ref 0 in
   let rec graph_size_aux c =
     let i', cinf = ANA.step !info in
+    incr edge_cnt;
     info := i';
     match cinf with
     | Fresh _ ->
@@ -265,4 +267,4 @@ let graph_size info c =
     | Seen _ -> ()
   in
   graph_size_aux c;
-  !cnt
+  !cnt, !edge_cnt

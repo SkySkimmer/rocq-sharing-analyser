@@ -44,12 +44,15 @@ Proof.
   repeat constructor.
   #[display(stats)] Sharing Analysis Proof.
   (* tree size = 121
-     graph size = 76 *)
+     graph size = 76
+     edge sharing factor = 0% (ie only leaves are shared)
+   *)
 Qed.
 
 #[display(stats)] Sharing Analysis Definition Body is_nat_10.
 (* tree size = 121
-   graph size = 23 *)
+   graph size = 23
+   edge count = 49 *)
 
 #[display(annotate)] Sharing Analysis Definition Body is_nat_10.
 (* pretty unreadable *)
@@ -66,5 +69,12 @@ Proof.
 Time Qed. (* 0.1 seconds *)
 
 #[display(stats)] Sharing Analysis Definition Body is_nat_500.
-(* tree size = 250k, graph size = 1003
+(* tree size = 250k, graph size = 1003, edge count = 2499
    graph size 1k is still too big to print the annotated version *)
+
+#[display(ltac2_annotate)] Sharing Analysis Definition Body is_nat_500.
+(* ltac2_annotate is O(graph_size) so can be printed
+   inlining refcount = 1 subterms seems like it would be good
+   about half the subterms are refcount = 1, another half refcount = 2
+   (and the leaves "Is_nat_S" and "S" are refcount 500 and 499 respectively)
+*)
