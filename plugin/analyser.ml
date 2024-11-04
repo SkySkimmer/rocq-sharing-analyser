@@ -155,41 +155,6 @@ let do_def_body_analysis ~opaque_access mode qid =
     Feedback.msg_info msg
 
 open Ltac2_plugin
-
-let rocq_type n = KerName.make Tac2env.coq_prefix (Label.make n)
-
-let t_constr = rocq_type "constr"
-
-let do_ltac2_constr_analysis ~pstate mode tac =
-  let open Tac2expr in
-  let loc = tac.CAst.loc in
-  let tac = CAst.make ?loc (CTacCnv (tac, CAst.make ?loc (CTypRef (AbsKn (Other t_constr), [])))) in
-  let tac, _ = Tac2intern.intern ~strict:false [] tac in
-  let tac = Tac2interp.interp Tac2interp.empty_environment tac in
-  let env = Global.env () in
-  let selector, proof =
-    match pstate with
-    | None ->
-      let sigma = Evd.from_env env in
-      let name, poly = Id.of_string "ltac2", false in
-      Goal_select.SelectAll, Proof.start ~name ~poly sigma []
-    | Some pstate ->
-      Goal_select.get_default_goal_selector (),
-      Declare.Proof.get pstate
-  in
-    let nosuchgoal =
-    let info = Exninfo.reify () in
-    Proofview.tclZERO ~info (Proof.SuggestNoSuchGoals (1,proof))
-  in
-  let tac = Goal_select.tclSELECT ~nosuchgoal selector tac in
-  let (proof, _, ans) = Proof.run_tactic (Global.env ()) tac proof in
-  let { Proof.sigma } = Proof.data proof in
-  let c = Tac2ffi.to_constr ans in
-  let c = EConstr.Unsafe.to_constr c in
-  let info = analyse_constr c in
-  let msg = pp_with_info mode env sigma info c in
-  Feedback.msg_info msg
-
 open Tac2ffi
 open Tac2externals
 
@@ -202,3 +167,16 @@ let () = define "hcons" (constr @-> ret constr) @@ fun c ->
   let c = EConstr.Unsafe.to_constr c in
   let c = Constr.hcons c in
   EConstr.of_constr c
+
+let to_mode : Tac2val.valexpr -> _ = function
+  | ValInt 0 -> Full
+  | ValInt 1 -> Stats
+  | ValInt 2 -> Ltac2
+  | ValBlk (0, [|b|]) -> Annotate (to_bool b)
+  | _ -> assert false
+
+let () = define "analyse" (to_mode @--> constr @-> eret unit) @@ fun mode c env sigma ->
+  let c = EConstr.Unsafe.to_constr c in
+  let info = analyse_constr c in
+  let msg = pp_with_info mode env sigma info c in
+  Feedback.msg_info msg

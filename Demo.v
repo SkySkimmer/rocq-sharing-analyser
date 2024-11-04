@@ -3,8 +3,8 @@ From SharingAnalyser Require Import Loader.
 
 Sharing Analysis Term 0.
 
-Sharing Analysis Ltac2 '(0,0).
-Sharing Analysis Ltac2 let x := '0 in '($x,$x).
+Ltac2 Eval analyse Full '(0,0).
+Ltac2 Eval analyse Full (let x := '0 in '($x,$x)).
 
 Goal nat * nat.
   exact (0,0).

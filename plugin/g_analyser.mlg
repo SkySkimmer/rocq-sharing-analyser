@@ -2,7 +2,6 @@ DECLARE PLUGIN "rocq-sharing-analyser.plugin"
 
 {
 open Stdarg
-open Ltac2_plugin.G_ltac2
 
 let mode = Analyser.output_mode_attr
 }
@@ -10,9 +9,6 @@ let mode = Analyser.output_mode_attr
 VERNAC COMMAND EXTEND SharingAnalyser CLASSIFIED AS QUERY STATE proof_opt_query
 | #[mode] [ "Sharing" "Analysis" "Term" constr(c) ] -> { fun ~pstate ->
     Analyser.do_constr_analysis ~pstate mode c
-  }
-| #[mode] [ "Sharing" "Analysis" "Ltac2" ltac2_expr(c) ] -> { fun ~pstate ->
-    Analyser.do_ltac2_constr_analysis ~pstate mode c
   }
 | #[mode] ![proof_query] [ "Sharing" "Analysis" "Proof" ] -> { fun ~pstate ->
     Analyser.do_proof_analysis ~pstate mode
