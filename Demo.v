@@ -3,25 +3,27 @@ From SharingAnalyser Require Import Loader.
 
 Sharing Analysis Term 0.
 
-Ltac2 Eval analyse Full '(0,0).
-Ltac2 Eval analyse Full (let x := '0 in '($x,$x)).
+Ltac2 default_mode := [Debug true;Stats].
 
-#[display=] Ltac2 Eval analyse Full (let x := '0 in '($x,$x)).
+Ltac2 Eval analyse default_mode '(0,0).
+Ltac2 Eval analyse default_mode (let x := '0 in '($x,$x)).
+
+Ltac2 Eval analyse [Debug true] (let x := '0 in '($x,$x)).
 
 Goal nat * nat.
   exact (0,0).
-  Sharing Analysis Proof.
+  #[display(debug,stats)] Sharing Analysis Proof.
 Abort.
 
 Definition foo := (0,0).
 
-Sharing Analysis Definition Body foo.
+#[display(debug,stats)] Sharing Analysis Definition Body foo.
 
 Definition bar := (0,0,0,0,0,0).
 
-Sharing Analysis Definition Body bar.
+#[display(debug)] Sharing Analysis Definition Body bar.
 
-#[display(ltac2_annotate)] Sharing Analysis Definition Body bar.
+#[display(ltac2,stats)] Sharing Analysis Definition Body bar.
 
 Inductive is_nat : nat -> Prop :=
 | Is_nat_Z : is_nat 0
@@ -56,10 +58,20 @@ Qed.
    graph size = 23
    edge count = 49 *)
 
-#[display(annotate)] Sharing Analysis Definition Body is_nat_10.
+#[display(ltac2)] Sharing Analysis Definition Body is_nat_10.
+(* mostly applications so kinda hard to read
+   maybe if we inlined refcount = 1 subterms?
+   and somehow improved the binding names so that eg we get
+   "let xIsnat_S := 'Isnat_S in"
+   instead of
+   "let x1 := 'Isnat_S in"
+   ??
+*)
+
+#[display(short_debug)] Sharing Analysis Definition Body is_nat_10.
 (* pretty unreadable *)
 
-#[display(verbose_annotate)] Sharing Analysis Definition Body is_nat_10.
+#[display(debug)] Sharing Analysis Definition Body is_nat_10.
 (* not too terrible I guess *)
 
 Lemma is_nat_500 : is_nat 500.
@@ -74,9 +86,11 @@ Time Qed. (* 0.1 seconds *)
 (* tree size = 250k, graph size = 1003, edge count = 2499
    graph size 1k is still too big to print the annotated version *)
 
-#[display(ltac2_annotate)] Sharing Analysis Definition Body is_nat_500.
-(* ltac2_annotate is O(graph_size) so can be printed
-   inlining refcount = 1 subterms seems like it would be good
-   about half the subterms are refcount = 1, another half refcount = 2
+#[display(ltac2)] Sharing Analysis Definition Body is_nat_500.
+(* ltac2 is O(graph_size) so can be printed, debug is O(tree_size) so can't
+   short_debug should be O(graph_size) but seems to blow the printing depth limit
+
+   for ltac2 display, inlining refcount = 1 subterms seems like it would be good
+   o this example about half the subterms are refcount = 1, another half refcount = 2
    (and the leaves "Is_nat_S" and "S" are refcount 500 and 499 respectively)
 *)

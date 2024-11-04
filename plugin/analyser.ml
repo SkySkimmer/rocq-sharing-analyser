@@ -3,29 +3,31 @@ open AnalyseConstr
 
 module ANA = RocqSharingAnalyser.SharingAnalyser
 
-type output_mode = Full | Stats | Ltac2 | Debug of bool
+type one_output_mode = Stats | Ltac2 | Debug of bool
 
-(* XXX this interface is not very nice, but I'm not sure what we want
-   maybe a list of outputs with the default being [Ltac2;Stats] instead of combining with Full?
-*)
+type output_mode = one_output_mode list
+
+let multi_parser ~key v : output_mode Attributes.key_parser = fun ?loc prev args ->
+  Attributes.assert_empty ?loc key args;
+  v :: Option.default [] prev
+
 let output_mode_attr =
   let open Attributes in
   let keys = [
-    ("full", Full);
     ("stats", Stats);
     ("ltac2", Ltac2);
     ("short_debug", Debug false);
     ("debug", Debug true);
   ]
   in
-  let mk (key,v) = (key, single_key_parser ~name:"display" ~key v) in
+  let mk (key,v) = (key, multi_parser ~key v) in
   let att =
     qualify_attribute "display" @@
     attribute_of_list @@
     List.map mk @@
     keys
   in
-  Attributes.Notations.(att >>= fun v -> return (Option.default Full v))
+  Attributes.Notations.(att >>= fun v -> return (List.rev @@ Option.default [Stats;Ltac2] v))
 
 let pr_rec_analysis x =
   let open Pp in
@@ -101,13 +103,14 @@ let pp_debug_annot ~verbose env sigma info c =
   in
   msg
 
-let pp_with_info mode env sigma info c = match mode with
-| Full ->
+let pp_with_info modes env sigma info c =
+  let pr_one = function
+    | Stats -> pp_stats info c
+    | Ltac2 -> pp_ltac2_annot env sigma info c
+    | Debug verbose -> pp_debug_annot ~verbose env sigma info c
+  in
   let open Pp in
-  pp_ltac2_annot env sigma info c ++ fnl() ++ pp_stats info c
-| Stats -> pp_stats info c
-| Ltac2 -> pp_ltac2_annot env sigma info c
-| Debug verbose -> pp_debug_annot ~verbose env sigma info c
+  prlist_with_sep fnl pr_one modes
 
 let get_current_context_opt pstate =
   match pstate with
@@ -172,13 +175,12 @@ let () = define "hcons" (constr @-> ret constr) @@ fun c ->
   EConstr.of_constr c
 
 let to_mode : Tac2val.valexpr -> _ = function
-  | ValInt 0 -> Full
-  | ValInt 1 -> Stats
-  | ValInt 2 -> Ltac2
+  | ValInt 0 -> Stats
+  | ValInt 1 -> Ltac2
   | ValBlk (0, [|b|]) -> Debug (to_bool b)
   | _ -> assert false
 
-let () = define "analyse" (to_mode @--> constr @-> eret unit) @@ fun mode c env sigma ->
+let () = define "analyse" (to_list to_mode @--> constr @-> eret unit) @@ fun mode c env sigma ->
   let c = EConstr.Unsafe.to_constr c in
   let info = analyse_constr c in
   let msg = pp_with_info mode env sigma info c in
