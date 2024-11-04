@@ -107,3 +107,11 @@ Time Qed. (* 0.1 seconds *)
    o this example about half the subterms are refcount = 1, another half refcount = 2
    (and the leaves "Is_nat_S" and "S" are refcount 500 and 499 respectively)
 *)
+
+(* XXX ltac2 and debug displays fail because we broke the "fix" invariants *)
+#[display(stats)] Sharing Analysis Definition Body Nat.add.
+
+(* bound variables are fine though (we have some custom printing in ltac2 mode) *)
+Sharing Analysis Definition Body plus_n_O.
+
+#[display(debug)] Sharing Analysis Definition Body plus_n_O.

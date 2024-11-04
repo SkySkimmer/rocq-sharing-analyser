@@ -72,11 +72,11 @@ let pp_ltac2_annot env sigma info c =
               Constr.mkVar @@ Id.of_string_soft x)
               k
           in
-          Printer.pr_constr_env env sigma (Constr.of_kind k)
+          str "'" ++ Printer.pr_constr_env env sigma (Constr.of_kind k)
       in
       hov 2
         (str "let x" ++ int uid ++ str " (* refcount = " ++ int refcnt ++ str " *) :=" ++ spc() ++
-         str "'" ++ c ++
+         c ++
          spc() ++ str "in") ++
       spc()
     in
