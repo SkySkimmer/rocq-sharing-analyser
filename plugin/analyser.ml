@@ -50,7 +50,7 @@ let pp_stats info c =
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
 
-(* XXX inline subterms with refcount = 1? *)
+(* XXX inline subterms with refcount = 1? except for rels I guess *)
 let pp_ltac2_annot env sigma info c =
   let info', data = annotate_constr info c in
   let () = if not (ANA.is_done info') then warn_not_done () in
