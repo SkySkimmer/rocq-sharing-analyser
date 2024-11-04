@@ -5,6 +5,7 @@ module ANA = RocqSharingAnalyser.SharingAnalyser
 
 type output_mode = Full | Stats | Ltac2 | Annotate of bool
 
+(* XXX this interface is not very nice, but I'm not sure what we want *)
 let output_mode_attr =
   let open Attributes in
   let keys = [
