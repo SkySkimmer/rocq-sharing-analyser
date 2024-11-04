@@ -3,13 +3,14 @@ open AnalyseConstr
 
 module ANA = RocqSharingAnalyser.SharingAnalyser
 
-type output_mode = Full | Stats | Annotate of bool
+type output_mode = Full | Stats | Ltac2 | Annotate of bool
 
 let output_mode_attr =
   let open Attributes in
   let keys = [
     ("full", Full);
     ("stats", Stats);
+    ("ltac2_annotate", Ltac2);
     ("annotate", Annotate false);
     ("verbose_annotate", Annotate true);
   ]
@@ -46,13 +47,43 @@ let pp_stats info c =
 let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
 
+(* XXX inline subterms with refcount = 1? *)
+let pp_ltac2_annot env sigma info c =
+  let info', data = annotate_constr info c in
+  let () = if not (ANA.is_done info') then warn_not_done () in
+  assert (data.root.uid = 0);
+  let msg =
+    let open Pp in
+    let pr_one uid =
+      let _, c, refcnt = Int.Map.get uid data.subterms in
+      let c = match c.kind with
+        | Rel i -> str "mkRel " ++ int i
+        | k ->
+          let k = map_kind_ltr (fun x ->
+              let x = Printf.sprintf "$x%d" x.uid in
+              Constr.mkVar @@ Id.of_string_soft x)
+              k
+          in
+          Printer.pr_constr_env env sigma (Constr.of_kind k)
+      in
+      hov 2
+        (str "let x" ++ int uid ++ str " (* refcount = " ++ int refcnt ++ str " *) :=" ++ spc() ++
+         str "'" ++ c ++
+         spc() ++ str "in") ++
+      spc()
+    in
+    v 0
+      (prlist_with_sep spc pr_one data.order ++
+       str "'$x0")
+  in
+  msg
+
 let pp_annot ~verbose env sigma info c =
   let info', {subterms = map; root = c} = debug_annotate_constr ~verbose info c in
+  let () = if not (ANA.is_done info') then warn_not_done () in
   let msg =
     let open Pp in
     let pr_constr c = Printer.pr_constr_env env sigma c in
-    let is_done = ANA.is_done info' in
-    let () = if not is_done then warn_not_done () in
     v 0
       (pr_constr c ++ spc() ++ spc() ++
        str "subterms:" ++ spc() ++
@@ -69,6 +100,7 @@ let pp_with_info mode env sigma info c = match mode with
   let open Pp in
   pp_annot ~verbose:true env sigma info c ++ fnl() ++ pp_stats info c
 | Stats -> pp_stats info c
+| Ltac2 -> pp_ltac2_annot env sigma info c
 | Annotate verbose -> pp_annot ~verbose env sigma info c
 
 let get_current_context_opt pstate =

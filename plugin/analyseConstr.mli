@@ -9,6 +9,10 @@ val analyse_econstr : EConstr.t -> analysis
 
 val iter_ltr : (Constr.t -> unit) -> Constr.t -> unit
 
+val map_kind_ltr : ('a -> 'b) ->
+  ('a, 'a, 'c, 'd, 'e) Constr.kind_of_term ->
+  ('b, 'b, 'c, 'd, 'e) Constr.kind_of_term
+
 type 'a kind_gen = ('a,'a,Sorts.t,UVars.Instance.t,Sorts.relevance) Constr.kind_of_term
 
 type annotated = {

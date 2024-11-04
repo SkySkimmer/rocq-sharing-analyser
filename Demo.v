@@ -19,6 +19,8 @@ Definition bar := (0,0,0,0,0,0).
 
 Sharing Analysis Definition Body bar.
 
+#[display(ltac2_annotate)] Sharing Analysis Definition Body bar.
+
 Inductive is_nat : nat -> Prop :=
 | Is_nat_Z : is_nat 0
 | Is_nat_S : forall n, is_nat n -> is_nat (S n).
