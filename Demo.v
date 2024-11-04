@@ -7,8 +7,21 @@ Ltac2 default_mode := [Debug true;Stats].
 
 Ltac2 Eval analyse default_mode '(0,0).
 Ltac2 Eval analyse default_mode (let x := '0 in '($x,$x)).
-
 Ltac2 Eval analyse [Debug true] (let x := '0 in '($x,$x)).
+
+(* the "nat" aren't shared because hcons operates on the non evar normalized term
+   XXX maybe we should be printing the evars instead of their definitions? *)
+Ltac2 Eval analyse [Ltac2] (hcons '(0,0)).
+
+(* here we can see that the analysis did not recurse into evar
+   definitions as there's a raw "(nat * nat)%type" term *)
+Ltac2 Eval analyse [Ltac2] (hcons '(0,0,0)).
+
+(* "constr:($c)" is optimized to "c" skipping the evar normalization *)
+Ltac2 nf_evar c := Constr.pretype preterm:($c).
+
+(* now hcons is operating on the final constr *)
+Ltac2 Eval analyse [Ltac2] (hcons (nf_evar '(0,0))).
 
 Goal nat * nat.
   exact (0,0).
