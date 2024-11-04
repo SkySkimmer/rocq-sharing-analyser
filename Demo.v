@@ -115,3 +115,44 @@ Time Qed. (* 0.1 seconds *)
 Sharing Analysis Definition Body plus_n_O.
 
 #[display(debug)] Sharing Analysis Definition Body plus_n_O.
+
+(* NB: shared "nat" subterms *)
+Ltac2 Eval
+  let c := constr:(let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+(* lazy, cbv, vm_compute, unfold reductions destroy sharing (and unshare the let binding) *)
+Ltac2 Eval
+  let c := eval lazy in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+Ltac2 Eval
+  let c := eval cbv in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+Ltac2 Eval
+  let c := eval vm_compute in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+(* unfold destroys sharing even when the constant to unfold does not appear *)
+Ltac2 Eval
+  let c := eval unfold Nat.add in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+(* simpl, cbn manage to keep a little sharing but only on leaves *)
+Ltac2 Eval
+  let c := eval simpl in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+Ltac2 Eval
+  let c := eval cbn in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+(* lazy head, hnf are fine (at least on this example) *)
+Ltac2 Eval
+  let c := eval lazy head zeta in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
+
+Ltac2 Eval
+  let c := eval hnf in (let x := 1 in (x, x)) in
+  analyse [Ltac2;Stats] c.
