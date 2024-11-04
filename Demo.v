@@ -6,6 +6,8 @@ Sharing Analysis Term 0.
 Ltac2 Eval analyse Full '(0,0).
 Ltac2 Eval analyse Full (let x := '0 in '($x,$x)).
 
+#[display=] Ltac2 Eval analyse Full (let x := '0 in '($x,$x)).
+
 Goal nat * nat.
   exact (0,0).
   Sharing Analysis Proof.

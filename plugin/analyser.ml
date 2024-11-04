@@ -3,17 +3,19 @@ open AnalyseConstr
 
 module ANA = RocqSharingAnalyser.SharingAnalyser
 
-type output_mode = Full | Stats | Ltac2 | Annotate of bool
+type output_mode = Full | Stats | Ltac2 | Debug of bool
 
-(* XXX this interface is not very nice, but I'm not sure what we want *)
+(* XXX this interface is not very nice, but I'm not sure what we want
+   maybe a list of outputs with the default being [Ltac2;Stats] instead of combining with Full?
+*)
 let output_mode_attr =
   let open Attributes in
   let keys = [
     ("full", Full);
     ("stats", Stats);
-    ("ltac2_annotate", Ltac2);
-    ("annotate", Annotate false);
-    ("verbose_annotate", Annotate true);
+    ("ltac2", Ltac2);
+    ("short_debug", Debug false);
+    ("debug", Debug true);
   ]
   in
   let mk (key,v) = (key, single_key_parser ~name:"display" ~key v) in
@@ -82,7 +84,7 @@ let pp_ltac2_annot env sigma info c =
   in
   msg
 
-let pp_annot ~verbose env sigma info c =
+let pp_debug_annot ~verbose env sigma info c =
   let info', {subterms = map; root = c} = debug_annotate_constr ~verbose info c in
   let () = if not (ANA.is_done info') then warn_not_done () in
   let msg =
@@ -102,10 +104,10 @@ let pp_annot ~verbose env sigma info c =
 let pp_with_info mode env sigma info c = match mode with
 | Full ->
   let open Pp in
-  pp_annot ~verbose:true env sigma info c ++ fnl() ++ pp_stats info c
+  pp_ltac2_annot env sigma info c ++ fnl() ++ pp_stats info c
 | Stats -> pp_stats info c
 | Ltac2 -> pp_ltac2_annot env sigma info c
-| Annotate verbose -> pp_annot ~verbose env sigma info c
+| Debug verbose -> pp_debug_annot ~verbose env sigma info c
 
 let get_current_context_opt pstate =
   match pstate with
@@ -173,7 +175,7 @@ let to_mode : Tac2val.valexpr -> _ = function
   | ValInt 0 -> Full
   | ValInt 1 -> Stats
   | ValInt 2 -> Ltac2
-  | ValBlk (0, [|b|]) -> Annotate (to_bool b)
+  | ValBlk (0, [|b|]) -> Debug (to_bool b)
   | _ -> assert false
 
 let () = define "analyse" (to_mode @--> constr @-> eret unit) @@ fun mode c env sigma ->
