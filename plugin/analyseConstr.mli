@@ -9,8 +9,6 @@ val analyse_econstr : EConstr.t -> analysis
 
 val iter_ltr : (Constr.t -> unit) -> Constr.t -> unit
 
-val map_ltr : (Constr.t -> Constr.t) -> Constr.t -> Constr.t
-
 (** The Int.Map contains for each subterm the actual constr, the annotated constr and the refcount *)
 val annotate_constr : verbose:bool -> analysis -> Constr.t ->
   analysis * (Constr.t * Constr.t * int) Int.Map.t * Constr.t

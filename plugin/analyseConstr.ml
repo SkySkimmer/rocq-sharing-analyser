@@ -109,69 +109,75 @@ let iter_ltr f c = match kind c with
   | CoFix (_,(_,tl,bl)) -> Array.iter f tl; Array.iter f bl
   | Array(_u,t,def,ty) -> Array.iter f t; f def; f ty
 
+let map_invert f = function
+  | NoInvert -> NoInvert
+  | CaseInvert {indices} -> CaseInvert {indices=Array.map f indices}
+
+let map_under_context f d =
+  let (nas, p) = d in
+  let p' = f p in
+  (nas, p')
+
+let map_branches f bl =
+  let bl' = Array.map (map_under_context f) bl in
+  bl'
+
+let map_return_predicate f (p,r) =
+  let p' = map_under_context f p in
+  p', r
+
 (* map in the order of memory representation *)
-let map_ltr f c =
-  match kind c with
+let map_kind_ltr f c =
+  match c with
   | (Rel _ | Meta _ | Var _   | Sort _ | Const _ | Ind _
-    | Construct _ | Int _ | Float _ | String _) -> c
+    | Construct _ | Int _ | Float _ | String _) as k -> k
   | Cast (b,k,t) ->
       let b' = f b in
       let t' = f t in
-      if b'==b && t' == t then c
-      else mkCast (b', k, t')
+      Cast (b', k, t')
   | Prod (na,t,b) ->
       let t' = f t in
       let b' = f b in
-      if b'==b && t' == t then c
-      else mkProd (na, t', b')
+      Prod (na, t', b')
   | Lambda (na,t,b) ->
       let t' = f t in
       let b' = f b in
-      if b'==b && t' == t then c
-      else mkLambda (na, t', b')
+      Lambda (na, t', b')
   | LetIn (na,b,t,k) ->
       let b' = f b in
       let t' = f t in
       let k' = f k in
-      if b'==b && t' == t && k'==k then c
-      else mkLetIn (na, b', t', k')
+      LetIn (na, b', t', k')
   | App (b,l) ->
       let b' = f b in
-      let l' = Array.Smart.map f l in
-      if b'==b && l'==l then c
-      else mkApp (b', l')
+      let l' = Array.map f l in
+      App (b', l')
   | Proj (p,r,t) ->
       let t' = f t in
-      if t' == t then c
-      else mkProj (p, r, t')
+      Proj (p, r, t')
   | Evar (e,l) ->
-      let l' = SList.Smart.map f l in
-      if l'==l then c
-      else mkEvar (e, l')
+      let l' = SList.Skip.map f l in
+      Evar (e, l')
   | Case (ci,u,pms,p,iv,b,bl) ->
-      let pms' = Array.Smart.map f pms in
+      let pms' = Array.map f pms in
       let p' = map_return_predicate f p in
       let iv' = map_invert f iv in
       let b' = f b in
       let bl' = map_branches f bl in
-      if b'==b && iv'==iv && p'==p && bl'==bl && pms'==pms then c
-      else mkCase (ci, u, pms', p', iv', b', bl')
+      Case (ci, u, pms', p', iv', b', bl')
   | Fix (ln,(lna,tl,bl)) ->
-      let tl' = Array.Smart.map f tl in
-      let bl' = Array.Smart.map f bl in
-      if tl'==tl && bl'==bl then c
-      else mkFix (ln,(lna,tl',bl'))
+      let tl' = Array.map f tl in
+      let bl' = Array.map f bl in
+      Fix (ln,(lna,tl',bl'))
   | CoFix(ln,(lna,tl,bl)) ->
-      let tl' = Array.Smart.map f tl in
-      let bl' = Array.Smart.map f bl in
-      if tl'==tl && bl'==bl then c
-      else mkCoFix (ln,(lna,tl',bl'))
+      let tl' = Array.map f tl in
+      let bl' = Array.map f bl in
+      CoFix (ln,(lna,tl',bl'))
   | Array(u,t,def,ty) ->
-    let t' = Array.Smart.map f t in
+    let t' = Array.map f t in
     let def' = f def in
     let ty' = f ty in
-    if def'==def && t==t' && ty==ty' then c
-    else mkArray(u,t',def',ty')
+    Array(u,t',def',ty')
 
 let annotate_constr ~verbose info c =
   let info = ref info in
@@ -186,7 +192,7 @@ let annotate_constr ~verbose info c =
     info := i';
     match cinf with
     | Fresh idx ->
-      let c' = map_ltr aux c in
+      let c' = Constr.of_kind @@ map_kind_ltr aux @@ Constr.kind c in
       map := Int.Map.add idx (c,c',ref 1) !map;
       annot ("fresh " ^ string_of_int idx) c'
     | Seen idx ->
