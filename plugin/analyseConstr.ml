@@ -179,34 +179,73 @@ let map_kind_ltr f c =
     let ty' = f ty in
     Array(u,t',def',ty')
 
-let annotate_constr ~verbose info c =
+type 'a kind_gen = ('a,'a,Sorts.t,UVars.Instance.t,Sorts.relevance) kind_of_term
+
+type annotated = {
+  self : constr;
+  kind : annotated kind_gen;
+  uid : int;
+}
+
+type 'a annotate = {
+  fresh : int -> constr -> 'a kind_gen -> 'a;
+  seen : int -> constr -> 'a -> 'a;
+}
+
+type 'a annotation_result = {
+  subterms : (Constr.t * 'a * int) Int.Map.t;
+  order : int list;
+  root : 'a;
+}
+
+let annotate_constr_gen annotate info c =
   let info = ref info in
   let map = ref Int.Map.empty in
-  let as_var s =
-    let s = Id.of_string_soft ("(* "^s^" *)") in
-    mkVar s
-  in
-  let annot s c = mkApp (as_var s, [|c|]) in
+  let order = ref [] in
   let rec aux c =
     let i', cinf = ANA.step !info in
     info := i';
     match cinf with
     | Fresh idx ->
-      let c' = Constr.of_kind @@ map_kind_ltr aux @@ Constr.kind c in
+      let k = map_kind_ltr aux @@ Constr.kind c in
+      let c' = annotate.fresh idx c k in
+      if Int.Map.mem idx !map then CErrors.anomaly Pp.(str "present Fresh when annotating");
       map := Int.Map.add idx (c,c',ref 1) !map;
-      annot ("fresh " ^ string_of_int idx) c'
+      order := idx :: !order;
+      c'
     | Seen idx ->
       match Int.Map.find_opt idx !map with
-      | None -> annot ("MISSING seen " ^ string_of_int idx) c
-      | Some (c',_,refcnt) ->
+      | None -> CErrors.anomaly Pp.(str "missing Seen when annotating")
+      | Some (c',annotated,refcnt) ->
         incr refcnt;
         if c != c' then CErrors.anomaly Pp.(str "mismatch when annotating")
-        else if verbose then annot ("seen " ^string_of_int idx) c
-        else as_var ("seen " ^ string_of_int idx)
+        else annotate.seen idx c annotated
   in
   let c = aux c in
   let map = Int.Map.map (fun (c,c',refcnt) -> c,c',!refcnt) !map in
-  !info, map, c
+  !info, { subterms = map; order = List.rev !order; root = c }
+
+let constr_annotate = {
+  fresh = (fun idx c k -> { self = c; kind = k; uid = idx });
+  seen = (fun _ _ x -> x);
+}
+
+let annotate_constr = annotate_constr_gen constr_annotate
+
+let debug_annotate ~verbose =
+  let as_var s idx =
+    let s = Id.of_string_soft ("(* "^s^" "^string_of_int idx^" *)") in
+    mkVar s
+  in
+  let annot s idx c = mkApp (as_var s idx, [|c|]) in
+  {
+    fresh = (fun idx c k -> annot "fresh" idx (Constr.of_kind k));
+    seen = (fun idx c _ ->
+        if verbose then annot "seen" idx c
+        else as_var "seen" idx);
+  }
+
+let debug_annotate_constr ~verbose = annotate_constr_gen (debug_annotate ~verbose)
 
 let rec tree_size_aux cnt c =
   Constr.fold tree_size_aux (cnt+1) c

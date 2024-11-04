@@ -9,9 +9,27 @@ val analyse_econstr : EConstr.t -> analysis
 
 val iter_ltr : (Constr.t -> unit) -> Constr.t -> unit
 
-(** The Int.Map contains for each subterm the actual constr, the annotated constr and the refcount *)
-val annotate_constr : verbose:bool -> analysis -> Constr.t ->
-  analysis * (Constr.t * Constr.t * int) Int.Map.t * Constr.t
+type 'a kind_gen = ('a,'a,Sorts.t,UVars.Instance.t,Sorts.relevance) Constr.kind_of_term
+
+type annotated = {
+  self : Constr.t;
+  kind : annotated kind_gen;
+  uid : int;
+}
+
+type 'a annotation_result = {
+  (* for each subterm the actual constr, the annotated constr and the refcount *)
+  subterms : (Constr.t * 'a * int) Int.Map.t;
+  (* uids in bottomup order *)
+  order : int list;
+  root : 'a;
+}
+
+val annotate_constr : analysis -> Constr.t ->
+  analysis * annotated annotation_result
+
+val debug_annotate_constr : verbose:bool -> analysis -> Constr.t ->
+  analysis * Constr.t annotation_result
 
 val tree_size : Constr.t -> int
 

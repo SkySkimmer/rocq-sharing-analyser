@@ -47,7 +47,7 @@ let warn_not_done = CWarnings.create ~name:"sharing-analysis-mismatch"
     Pp.(fun () -> str "Analysis mismatch (not fully consumed)!")
 
 let pp_annot ~verbose env sigma info c =
-  let info', map, c = annotate_constr ~verbose info c in
+  let info', {subterms = map; root = c} = debug_annotate_constr ~verbose info c in
   let msg =
     let open Pp in
     let pr_constr c = Printer.pr_constr_env env sigma c in
