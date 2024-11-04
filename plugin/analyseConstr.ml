@@ -225,6 +225,11 @@ let annotate_constr_gen annotate info c =
   let map = Int.Map.map (fun (c,c',refcnt) -> c,c',!refcnt) !map in
   !info, { subterms = map; order = List.rev !order; root = c }
 
+let annotate_constr_gen a b c : _ *_ =
+  NewProfile.profile "annotate_constr" (fun () ->
+      annotate_constr_gen a b c)
+    ()
+
 let constr_annotate = {
   fresh = (fun idx c k -> { self = c; kind = k; uid = idx });
   seen = (fun _ _ x -> x);
