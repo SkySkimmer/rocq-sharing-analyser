@@ -38,6 +38,8 @@ taking 3 nodes instead of 7.
 This project provides a plugin to print debug information about how
 Rocq's terms are structured in memory.
 
+See [Demo.v](Demo.v) for examples.
+
 # Build and install
 
 Build with `dune build`.
