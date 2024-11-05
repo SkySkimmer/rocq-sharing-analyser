@@ -35,11 +35,11 @@ For instance `(nat -> nat) -> (nat -> nat)` can be shared as
 
 taking 3 nodes instead of 7.
 
-Note: currently Rocq only uses in-memory sharing to reduce memory usage and
-shortcut some equality tests.
-
 This project provides a plugin to print debug information about how
 Rocq's terms are structured in memory.
+
+(Note: currently Rocq only uses in-memory sharing to reduce memory usage and
+shortcut some equality tests.)
 
 See [Demo.v](Demo.v) for examples.
 
