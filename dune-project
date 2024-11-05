@@ -9,7 +9,6 @@
  (name rocq-sharing-analyser)
  (depends
   (dune (>= 3.8.0))
-  (ocaml (>= 4.09.0))
-  (coq-core (= 8.20.0))
-  (coq-stdlib (= 8.20.0)))
+  (coq-core (>= 8.20.0))
+  (coq-stdlib (>= 8.20.0)))
   (synopsis "Memory sharing analyser for Rocq"))

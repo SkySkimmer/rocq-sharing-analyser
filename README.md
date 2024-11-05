@@ -45,6 +45,8 @@ See [Demo.v](Demo.v) for examples.
 
 ## Build and install
 
+Supported Coq versions: 8.20, maybe master. If it compiles then it should work.
+
 Build with `dune build`.
 
 Install with `opam install .` (it will do a separate build).
