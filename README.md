@@ -89,14 +89,21 @@ x0
 ~~~
 
 - `debug` (`Debug true` in Ltac2): print the term with annotations about sharing.
-  For instance the most shared `(nat -> nat) -> (nat -> nat)` is
-  `((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))`.
+  For instance on the most shared `(nat -> nat) -> (nat -> nat)` it prints
+
+~~~
+((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))
+
+subterms:
+0 (refcount = 1) ==>
+  ((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))
+1 (refcount = 2) ==> ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat))
+2 (refcount = 2) ==> ((* fresh 2 *) nat)
+~~~
 
   The subterms of already seen subterms are not annotated, for
   instance we have `(* seen 1 *) (nat -> nat)` instead of
   `(* seen 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat)`.
-
-  Additionally each subterm is reprinted.
 
 - `short_debug` (`Debug false` in Ltac2): like `debug` but
   already-seen subterms are not printed, ie we get
