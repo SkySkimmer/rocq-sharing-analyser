@@ -43,13 +43,13 @@ Rocq's terms are structured in memory.
 
 See [Demo.v](Demo.v) for examples.
 
-# Build and install
+## Build and install
 
 Build with `dune build`.
 
 Install with `opam install .` (it will do a separate build).
 
-# Entry points
+## Entry points
 
 The entry points are
 
@@ -70,7 +70,7 @@ The entry points are
   Defined evars present in it will not be expanded for the analysis
   but may be expanded when printing the results.
 
-# Display controls
+## Display controls
 
 The results are printed according to the `display` attribute
 (according to the output mode argument in Ltac2), which is a list of
@@ -109,9 +109,9 @@ the following (by default `#[display(ltac2,stats)]`):
   already-seen subterms are not printed, ie we get
   `((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *)) -> (* seen 1 *)))`.
 
-# Known issues
+## Known issues
 
-## Ltac2 display is not real Ltac2
+### Ltac2 display is not real Ltac2
 
 The Ltac2 display mode cannot always be copy-pasted. In particular
 when a subterm contains bound variables they will be represented using
@@ -128,12 +128,12 @@ x0
 
 and `let x2 (* refcount = 1 *) := '(fun _ : $x1 => $x3) in` would fail.
 
-## Debug display is incorrect when implicits or coercions are involved
+### Debug display is incorrect when implicits or coercions are involved
 
 For instance on `id 0` we get `((* fresh 0 *) ((* fresh 1 *) id ((* fresh 2 *) nat) ((* fresh 3 *) 0)))`.
 
 Debug display should be read as though there were no implicit arguments or coercions declared.
 
-## Display is broken for some terms
+### Display is broken for some terms
 
 In particular attempting to print `fix` terms will produce anomalies.
