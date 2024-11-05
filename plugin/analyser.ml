@@ -11,6 +11,8 @@ let multi_parser ~key v : output_mode Attributes.key_parser = fun ?loc prev args
   Attributes.assert_empty ?loc key args;
   v :: Option.default [] prev
 
+let default_mode = [Stats;Ltac2]
+
 let output_mode_attr =
   let open Attributes in
   let keys = [
@@ -27,7 +29,7 @@ let output_mode_attr =
     List.map mk @@
     keys
   in
-  Attributes.Notations.(att >>= fun v -> return (List.rev @@ Option.default [Stats;Ltac2] v))
+  Attributes.Notations.(att >>= fun v -> return (List.rev @@ Option.default default_mode v))
 
 let pr_rec_analysis x =
   let open Pp in
@@ -183,5 +185,6 @@ let to_mode : Tac2val.valexpr -> _ = function
 let () = define "analyse" (to_list to_mode @--> constr @-> eret unit) @@ fun mode c env sigma ->
   let c = EConstr.Unsafe.to_constr c in
   let info = analyse_constr c in
+  let mode = if CList.is_empty mode then default_mode else mode in
   let msg = pp_with_info mode env sigma info c in
   Feedback.msg_info msg
