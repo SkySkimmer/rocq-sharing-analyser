@@ -128,6 +128,12 @@ x0
 
 and `let x2 (* refcount = 1 *) := '(fun _ : $x1 => $x3) in` would fail.
 
+## Debug display is incorrect when implicits or coercions are involved
+
+For instance on `id 0` we get `((* fresh 0 *) ((* fresh 1 *) id ((* fresh 2 *) nat) ((* fresh 3 *) 0)))`.
+
+Debug display should be read as though there were no implicit arguments or coercions declared.
+
 ## Display is broken for some terms
 
 In particular attempting to print `fix` terms will produce anomalies.
