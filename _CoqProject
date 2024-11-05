@@ -1,0 +1,4 @@
+-Q theories SharingAnalyser
+
+-I _build/install/default/lib/
+-Q _build/install/default/lib/coq/user-contrib/SharingAnalyser SharingAnalyser
