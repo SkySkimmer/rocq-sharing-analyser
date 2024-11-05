@@ -81,25 +81,25 @@ the following (by default `#[display(ltac2,stats)]`):
 - `ltac2` (`Ltac2` in Ltac2): print a pseudo-Ltac2 representation of the term.
   For instance the most shared `(nat -> nat) -> (nat -> nat)` is
 
-~~~
-let x2 (* refcount = 2 *) := 'nat in
-let x1 (* refcount = 2 *) := '($x2 -> $x2) in
-let x0 (* refcount = 1 *) := '($x1 -> $x1) in
-x0
-~~~
+  ~~~
+  let x2 (* refcount = 2 *) := 'nat in
+  let x1 (* refcount = 2 *) := '($x2 -> $x2) in
+  let x0 (* refcount = 1 *) := '($x1 -> $x1) in
+  x0
+  ~~~
 
 - `debug` (`Debug true` in Ltac2): print the term with annotations about sharing.
   For instance on the most shared `(nat -> nat) -> (nat -> nat)` it prints
 
-~~~
-((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))
-
-subterms:
-0 (refcount = 1) ==>
+  ~~~
   ((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))
-1 (refcount = 2) ==> ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat))
-2 (refcount = 2) ==> ((* fresh 2 *) nat)
-~~~
+
+  subterms:
+  0 (refcount = 1) ==>
+    ((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat) -> (* seen 1 *) (nat -> nat)))
+  1 (refcount = 2) ==> ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *) nat))
+  2 (refcount = 2) ==> ((* fresh 2 *) nat)
+  ~~~
 
   The subterms of already seen subterms are not annotated, for
   instance we have `(* seen 1 *) (nat -> nat)` instead of
