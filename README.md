@@ -109,6 +109,36 @@ the following (by default `#[display(ltac2,stats)]`):
   already-seen subterms are not printed, ie we get
   `((* fresh 0 *) ((* fresh 1 *) ((* fresh 2 *) nat -> (* seen 2 *)) -> (* seen 1 *)))`.
 
+## Implementation
+
+Sharing analysis cannot be implemented in OCaml because there is no
+way while traversing a value to efficiently tell whether it was
+previously encountered.
+
+Instead we do a first traversal in C, using a modified version of
+OCaml's marshalling code. Since the C code does not call the GC while
+traversing, pointer values of traversed OCaml values are stable and
+can be used as keys in a hashtable for quick recognition.
+
+An OCaml wrapper is exposed at
+[lib/sharingAnalyser.mli](lib/sharingAnalyser.mli).
+
+The function `analyse` traverses (depth-first, left to right) the
+given value according to a `type_descr`, and for specified nodes
+records whether they have been previously encountered in the
+traversal. The traversal can then be replayed in OCaml code, doing a
+`step` at each recorded node to get sharing information.
+
+The code in `lib/` is independent of Rocq.
+
+[plugin/analyseConstr.ml](plugin/analyseConstr.ml) then uses the core
+analysis library to annotate Rocq terms,
+[plugin/analyser.ml](plugin/analyser.ml) prints the result and defines the entry points,
+and [plugin/g_analyser.mlg](plugin/g_analyser.mlg) declares the grammar.
+
+[theories/Loader.v](theories/Loader.v) contains the `Declare ML Module`
+and Ltac2 declarations.
+
 ## Known issues
 
 ### Ltac2 display is not real Ltac2
