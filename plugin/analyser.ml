@@ -84,7 +84,7 @@ let pp_ltac2_annot env sigma info c =
     in
     v 0
       (prlist_with_sep spc pr_one data.order ++
-       str "'$x0")
+       str "x0")
   in
   msg
 
